@@ -24,7 +24,8 @@ export async function login(formData: FormData) {
     redirect('/login')
   }
 
-  redirect('/login')
+  // Redirect to a loading page that shows the check email message
+  redirect('/login/check-email')
 }
 
 export async function signup(formData: FormData) {

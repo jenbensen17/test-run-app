@@ -1,6 +1,7 @@
-import { login, signup } from './actions'
+import { login } from './actions'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default async function LoginPage() {
   const supabase = await createClient()
@@ -39,18 +40,12 @@ export default async function LoginPage() {
                     </div>
                   </div>
 
-                  <div className="flex space-x-4">
+                  <div>
                     <button
                       formAction={login}
-                      className="flex-1 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                      className="w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                     >
                       Send Magic Link
-                    </button>
-                    <button
-                      formAction={signup}
-                      className="flex-1 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                    >
-                      Sign up
                     </button>
                   </div>
                 </form>
