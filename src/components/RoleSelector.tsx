@@ -45,14 +45,14 @@ export default function RoleSelector() {
           <button
             onClick={() => handleRoleSelect('instructor')}
             disabled={isSubmitting}
-            className="flex-1 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50"
+            className="flex-1 rounded-md bg-transparent px-3 py-2 text-sm font-semibold text-gray-900 border-2 border-orange-500 hover:bg-orange-500/20 hover:text-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-50 transition-colors"
           >
             Instructor
           </button>
           <button
             onClick={() => handleRoleSelect('student')}
             disabled={isSubmitting}
-            className="flex-1 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50"
+            className="flex-1 rounded-md bg-transparent px-3 py-2 text-sm font-semibold text-gray-900 border-2 border-blue-500 hover:bg-blue-500/20 hover:text-blue-700 disabled:opacity-50 transition-colors"
           >
             Student
           </button>
