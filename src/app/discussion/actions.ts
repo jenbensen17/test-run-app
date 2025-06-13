@@ -37,7 +37,8 @@ export async function createPost(formData: FormData) {
       topic,
       user_id: user.id,
       user_email: user.email,
-      user_role: roleData?.role || 'student' // Default to student if no role is set
+      user_role: roleData?.role || 'student', // Default to student if no role is set
+      pinned: false // Set default value for pinned
     }])
     .select()
     .single()
@@ -101,4 +102,43 @@ export async function markPostResolved(postId: string) {
 
   revalidatePath('/discussion')
   redirect('/discussion')
+}
+
+export async function togglePinPost(postId: string) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    redirect('/login')
+  }
+
+  // Check if the user is an instructor
+  const { data: roleData } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!roleData || roleData.role !== 'instructor') {
+    redirect('/discussion')
+  }
+
+  // Get current pin status
+  const { data: post } = await supabase
+    .from('posts')
+    .select('pinned')
+    .eq('id', postId)
+    .single()
+
+  const { error } = await supabase
+    .from('posts')
+    .update({ pinned: !post?.pinned })
+    .eq('id', postId)
+
+  if (error) {
+    console.error('Error toggling pin status:', error)
+    redirect('/discussion')
+  }
+
+  revalidatePath('/discussion')
 } 

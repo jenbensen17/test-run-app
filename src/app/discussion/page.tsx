@@ -1,7 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/DashboardLayout'
-import { createPost, markPostResolved } from './actions'
+import { createPost, markPostResolved, togglePinPost } from './actions'
 import Replies from '@/components/Replies'
 import TopicFilterWrapper from '@/components/TopicFilterWrapper'
 import { useRouter } from 'next/navigation'
@@ -31,6 +31,8 @@ export default async function DiscussionPage(
     redirect('/dashboard')
   }
 
+  const isInstructor = roleData.role === 'instructor'
+
   // Build the query based on topic filter
   let query = supabase
     .from('posts')
@@ -38,6 +40,7 @@ export default async function DiscussionPage(
       *,
       replies:replies(count)
     `)
+    .order('pinned', { ascending: false }) // Sort pinned posts first
     .order('created_at', { ascending: false })
 
   // Apply topic filter if specified
@@ -123,9 +126,16 @@ export default async function DiscussionPage(
                   <div className="p-4">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="text-lg font-medium text-gray-900">{post.title}</h3>
+                        <h3 className="text-lg font-medium text-gray-900">
+                          {post.pinned && (
+                            <span className="mr-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              📌 Pinned
+                            </span>
+                          )}
+                          {post.title}
+                        </h3>
                         <p className="mt-1 text-sm text-gray-500">
-                          Posted by <span className="font-medium">{post.user_email}</span><span>{post.user_role}</span>
+                          Posted by <span className="font-medium">{post.user_email}</span>
                           {post.user_role && (
                             <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                               post.user_role === 'student' 
@@ -142,6 +152,20 @@ export default async function DiscussionPage(
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                           {post.topic}
                         </span>
+                        {isInstructor && (
+                          <form action={togglePinPost.bind(null, post.id)}>
+                            <button
+                              type="submit"
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                post.pinned
+                                  ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                              } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+                            >
+                              {post.pinned ? 'Unpin' : 'Pin'}
+                            </button>
+                          </form>
+                        )}
                         {post.status === 'resolved' ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             Resolved
