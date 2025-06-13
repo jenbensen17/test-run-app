@@ -11,6 +11,7 @@ type Reply = {
   created_at: string
   upvotes_count: number
   has_upvoted: boolean
+  user_role?: string
 }
 
 type RepliesProps = {
@@ -39,10 +40,18 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
         async (payload) => {
           if (payload.eventType === 'INSERT') {
             const { data: { user } } = await supabase.auth.getUser()
+            // Fetch user role
+            const { data: roleData } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', user?.id)
+              .single()
+
             const newReply = {
               ...payload.new,
               upvotes_count: 0,
-              has_upvoted: false
+              has_upvoted: false,
+              user_role: roleData?.role
             } as Reply
             setReplies(current => sortReplies([newReply, ...current]))
           } else if (payload.eventType === 'DELETE') {
@@ -119,7 +128,8 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
         user_email: user.email || '',
         is_ai_response: false,
         upvotes_count: 0,
-        has_upvoted: false
+        has_upvoted: false,
+        user_role: undefined
       }
 
       // Add optimistic reply to the list
@@ -263,7 +273,18 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
                         AI Assistant
                       </span>
                     ) : (
-                      reply.user_email
+                      <>
+                        {reply.user_email}
+                        {reply.user_role && (
+                          <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            reply.user_role === 'student' 
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-orange-100 text-orange-800'
+                          }`}>
+                            {reply.user_role}
+                          </span>
+                        )}
+                      </>
                     )}
                   </span>
                 </div>

@@ -67,11 +67,20 @@ export default async function DiscussionPage(
 
       const userUpvoteIds = new Set(userUpvotes?.map(u => u.reply_id))
 
-      // Transform replies to include upvote count and user's upvote status
+      // Get user roles for all replies
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', replies?.map(r => r.user_id) || [])
+
+      const userRoleMap = new Map(userRoles?.map(ur => [ur.user_id, ur.role]) || [])
+
+      // Transform replies to include upvote count, user's upvote status, and user role
       const transformedReplies = replies?.map(reply => ({
         ...reply,
         upvotes_count: reply.upvotes?.[0]?.count || 0,
-        has_upvoted: userUpvoteIds.has(reply.id)
+        has_upvoted: userUpvoteIds.has(reply.id),
+        user_role: userRoleMap.get(reply.user_id)
       })) || []
 
       // Sort replies by upvote count (descending) and then by creation date (ascending)
