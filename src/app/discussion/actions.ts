@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/app/utils/supabase-server'
 import { generateAIResponse } from '@/utils/gemini'
 import { revalidatePath } from 'next/cache'
 
