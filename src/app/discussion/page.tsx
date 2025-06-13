@@ -53,13 +53,24 @@ export default async function DiscussionPage() {
 
       const userUpvoteIds = new Set(userUpvotes?.map(u => u.reply_id))
 
+      // Transform replies to include upvote count and user's upvote status
+      const transformedReplies = replies?.map(reply => ({
+        ...reply,
+        upvotes_count: reply.upvotes?.[0]?.count || 0,
+        has_upvoted: userUpvoteIds.has(reply.id)
+      })) || []
+
+      // Sort replies by upvote count (descending) and then by creation date (ascending)
+      const sortedReplies = transformedReplies.sort((a, b) => {
+        if (b.upvotes_count !== a.upvotes_count) {
+          return b.upvotes_count - a.upvotes_count
+        }
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      })
+
       return {
         ...post,
-        replies: replies?.map(reply => ({
-          ...reply,
-          upvotes_count: reply.upvotes?.[0]?.count || 0,
-          has_upvoted: userUpvoteIds.has(reply.id)
-        })) || []
+        replies: sortedReplies
       }
     }) || []
   )
@@ -87,6 +98,7 @@ export default async function DiscussionPage() {
                   id="title"
                   required
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-black"
+                  style={{ padding: '10px' }}
                   placeholder="Brief description of your question"
                 />
               </div>
@@ -100,6 +112,7 @@ export default async function DiscussionPage() {
                   rows={4}
                   required
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-black"
+                  style={{ padding: '10px' }}
                   placeholder="Describe your question in detail. Include any code snippets or error messages if applicable."
                 />
               </div>
@@ -112,6 +125,7 @@ export default async function DiscussionPage() {
                   name="topic"
                   required
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-black"
+                  style={{ padding: '10px' }}
                 >
                   <option value="">Select a topic</option>
                   <option value="regression">Regression</option>
