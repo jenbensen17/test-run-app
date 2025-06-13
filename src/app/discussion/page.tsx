@@ -5,11 +5,12 @@ import { createPost } from './actions'
 import Replies from '@/components/Replies'
 import TopicFilterWrapper from '@/components/TopicFilterWrapper'
 
-export default async function DiscussionPage({
-  searchParams,
-}: {
-  searchParams: { topic?: string }
-}) {
+export default async function DiscussionPage(
+  props: {
+    searchParams: Promise<{ topic?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
