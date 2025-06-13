@@ -27,7 +27,7 @@ export default function LoginPage() {
       
       // Proceed with login
       await login(formData)
-    } catch (err) {
+    } catch (error) {
       setError('An error occurred. Please try again.')
     } finally {
       setIsLoading(false)
