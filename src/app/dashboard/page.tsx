@@ -1,5 +1,6 @@
 import { createClient } from '@/app/utils/supabase-server'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import RoleSelector from '@/components/RoleSelector'
 import DashboardLayout from '@/components/DashboardLayout'
 
@@ -46,14 +47,14 @@ export default async function DashboardPage() {
           Welcome to your analytics dashboard
         </p>
         <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
+          <Link href="/discussion" className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-200">
             <div className="px-4 py-5 sm:p-6">
               <h3 className="text-lg font-medium text-gray-900">Discussion Board</h3>
               <p className="mt-1 text-sm text-gray-500">
                 View and participate in class discussions
               </p>
             </div>
-          </div>
+          </Link>
         </div>
       </div>
     </DashboardLayout>
