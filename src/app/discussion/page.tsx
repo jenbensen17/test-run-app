@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/DashboardLayout'
 import { createPost } from './actions'
+import Replies from '@/components/Replies'
 
 export default async function DiscussionPage() {
   const supabase = await createClient()
@@ -22,11 +23,46 @@ export default async function DiscussionPage() {
     redirect('/dashboard')
   }
 
-  // Fetch posts
+  // Fetch posts with reply counts
   const { data: posts } = await supabase
     .from('posts')
-    .select('*')
+    .select(`
+      *,
+      replies:replies(count)
+    `)
     .order('created_at', { ascending: false })
+
+  // Fetch replies for each post
+  const postsWithReplies = await Promise.all(
+    posts?.map(async (post) => {
+      const { data: replies } = await supabase
+        .from('replies')
+        .select(`
+          *,
+          upvotes:upvotes(count)
+        `)
+        .eq('post_id', post.id)
+        .order('created_at', { ascending: true })
+
+      // Get user's upvotes for these replies
+      const { data: userUpvotes } = await supabase
+        .from('upvotes')
+        .select('reply_id')
+        .eq('user_id', user.id)
+        .in('reply_id', replies?.map(r => r.id) || [])
+
+      const userUpvoteIds = new Set(userUpvotes?.map(u => u.reply_id))
+
+      return {
+        ...post,
+        replies: replies?.map(reply => ({
+          ...reply,
+          upvotes_count: reply.upvotes?.[0]?.count || 0,
+          has_upvoted: userUpvoteIds.has(reply.id)
+        })) || []
+      }
+    }) || []
+  )
 
   return (
     <DashboardLayout>
@@ -99,30 +135,35 @@ export default async function DiscussionPage() {
         {/* Questions List */}
         <div className="mt-6">
           <h2 className="text-xl font-semibold text-gray-900">Recent Questions</h2>
-          <div className="mt-4 space-y-4">
-            {posts && posts.length > 0 ? (
-              posts.map((post) => (
-                <div key={post.id} className="bg-white shadow rounded-lg p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">{post.title}</h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Posted by {post.user_email} • {new Date(post.created_at).toLocaleDateString()}
-                      </p>
+          <div className="mt-4 space-y-6">
+            {postsWithReplies.length > 0 ? (
+              postsWithReplies.map((post) => (
+                <div key={post.id} className="bg-white shadow rounded-lg">
+                  <div className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900">{post.title}</h3>
+                        <p className="mt-1 text-sm text-gray-500">
+                          Posted by {post.user_email} • {new Date(post.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        post.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        post.status === 'answered' ? 'bg-blue-100 text-blue-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {post.status}
+                      </span>
                     </div>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      post.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      post.status === 'answered' ? 'bg-blue-100 text-blue-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {post.status}
-                    </span>
+                    <p className="mt-2 text-gray-600">{post.content}</p>
+                    <div className="mt-2">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        {post.topic}
+                      </span>
+                    </div>
                   </div>
-                  <p className="mt-2 text-gray-600">{post.content}</p>
-                  <div className="mt-2">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      {post.topic}
-                    </span>
+                  <div className="border-t border-gray-200 px-4 py-4">
+                    <Replies postId={post.id} initialReplies={post.replies} />
                   </div>
                 </div>
               ))
