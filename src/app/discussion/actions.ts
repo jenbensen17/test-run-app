@@ -1,23 +1,24 @@
 'use server'
 
-import { createClient } from '@/app/utils/supabase-server'
+import { createClient } from '@/utils/supabase/server'
 import { generateAIResponse } from '@/utils/gemini'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 
 export async function createPost(formData: FormData) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    redirect('/login')
+  }
+
   const title = formData.get('title') as string
   const content = formData.get('content') as string
   const topic = formData.get('topic') as string
 
   if (!title || !content || !topic) {
     throw new Error('Missing required fields')
-  }
-
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    throw new Error('Not authenticated')
   }
 
   // Create the post
@@ -34,7 +35,8 @@ export async function createPost(formData: FormData) {
     .single()
 
   if (postError) {
-    throw postError
+    console.error('Error creating post:', postError)
+    redirect('/discussion')
   }
 
   // Generate AI response
@@ -57,6 +59,38 @@ export async function createPost(formData: FormData) {
 
   // Revalidate the discussion page to show the new post
   revalidatePath('/discussion')
+  redirect('/discussion')
+}
 
-  return post
+export async function markPostResolved(postId: string) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    redirect('/login')
+  }
+
+  // First check if the user is the post author
+  const { data: post } = await supabase
+    .from('posts')
+    .select('user_id')
+    .eq('id', postId)
+    .single()
+
+  if (!post || post.user_id !== user.id) {
+    redirect('/discussion')
+  }
+
+  const { error } = await supabase
+    .from('posts')
+    .update({ status: 'resolved' })
+    .eq('id', postId)
+
+  if (error) {
+    console.error('Error marking post as resolved:', error)
+    redirect('/discussion')
+  }
+
+  revalidatePath('/discussion')
+  redirect('/discussion')
 } 

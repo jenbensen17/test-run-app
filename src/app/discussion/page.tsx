@@ -1,7 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/DashboardLayout'
-import { createPost } from './actions'
+import { createPost, markPostResolved } from './actions'
 import Replies from '@/components/Replies'
 import TopicFilterWrapper from '@/components/TopicFilterWrapper'
 
@@ -46,6 +46,14 @@ export default async function DiscussionPage(
   // Fetch posts with reply counts
   const { data: posts } = await query
 
+  // Get user roles for all posts
+  const { data: userRoles } = await supabase
+    .from('user_roles')
+    .select('user_id, role')
+    .in('user_id', posts?.map(p => p.user_id) || [])
+
+  const userRoleMap = new Map(userRoles?.map(ur => [ur.user_id, ur.role]) || [])
+
   // Fetch replies for each post
   const postsWithReplies = await Promise.all(
     posts?.map(async (post) => {
@@ -68,19 +76,19 @@ export default async function DiscussionPage(
       const userUpvoteIds = new Set(userUpvotes?.map(u => u.reply_id))
 
       // Get user roles for all replies
-      const { data: userRoles } = await supabase
+      const { data: replyUserRoles } = await supabase
         .from('user_roles')
         .select('user_id, role')
         .in('user_id', replies?.map(r => r.user_id) || [])
 
-      const userRoleMap = new Map(userRoles?.map(ur => [ur.user_id, ur.role]) || [])
+      const replyUserRoleMap = new Map(replyUserRoles?.map(ur => [ur.user_id, ur.role]) || [])
 
       // Transform replies to include upvote count, user's upvote status, and user role
       const transformedReplies = replies?.map(reply => ({
         ...reply,
         upvotes_count: reply.upvotes?.[0]?.count || 0,
         has_upvoted: userUpvoteIds.has(reply.id),
-        user_role: userRoleMap.get(reply.user_id)
+        user_role: replyUserRoleMap.get(reply.user_id)
       })) || []
 
       // Sort replies by upvote count (descending) and then by creation date (ascending)
@@ -93,7 +101,8 @@ export default async function DiscussionPage(
 
       return {
         ...post,
-        replies: sortedReplies
+        replies: sortedReplies,
+        user_role: userRoleMap.get(post.user_id)
       }
     }) || []
   )
@@ -185,6 +194,15 @@ export default async function DiscussionPage(
                         <h3 className="text-lg font-medium text-gray-900">{post.title}</h3>
                         <p className="mt-1 text-sm text-gray-500">
                           Posted by <span className="font-medium">{post.user_email}</span>
+                          {post.user_role && (
+                            <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              post.user_role === 'student' 
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-orange-100 text-orange-800'
+                            }`}>
+                              {post.user_role}
+                            </span>
+                          )}
                           <br /><span className="text-gray-400">{new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                         </p>
                       </div>
@@ -192,13 +210,24 @@ export default async function DiscussionPage(
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                           {post.topic}
                         </span>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          post.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          post.status === 'answered' ? 'bg-blue-100 text-blue-800' :
-                          'bg-green-100 text-green-800'
-                        }`}>
-                          {post.status}
-                        </span>
+                        {post.status === 'resolved' ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Resolved
+                          </span>
+                        ) : post.user_id === user.id ? (
+                          <form action={markPostResolved.bind(null, post.id)}>
+                            <button
+                              type="submit"
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
+                            >
+                              Mark as Resolved
+                            </button>
+                          </form>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Pending
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="mt-2 text-gray-600 whitespace-pre-wrap">{post.content}</div>
