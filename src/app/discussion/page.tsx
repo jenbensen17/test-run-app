@@ -57,8 +57,6 @@ export default async function DiscussionPage(
     .select('user_id, role')
     .in('user_id', posts?.map(p => p.user_id) || [])
 
-  const userRoleMap = new Map(userRoles?.map(ur => [ur.user_id, ur.role]) || [])
-
   // Fetch replies for each post
   const postsWithReplies = await Promise.all(
     posts?.map(async (post) => {

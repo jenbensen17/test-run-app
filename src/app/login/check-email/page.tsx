@@ -21,7 +21,7 @@ export default async function CheckEmailPage() {
                   <LoadingSpinner />
                   <h3 className="mt-4 text-lg font-medium text-gray-900">Check your email</h3>
                   <p className="mt-2 text-sm text-gray-500">
-                    We've sent you a magic link. Click the link in your email to sign in.
+                    We&apos;ve sent you a magic link. Click the link in your email to sign in.
                   </p>
                 </div>
               </div>

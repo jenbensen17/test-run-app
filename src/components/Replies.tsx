@@ -60,7 +60,6 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
         },
         async (payload) => {
           if (payload.eventType === 'INSERT') {
-            const { data: { user } } = await supabase.auth.getUser()
             const newReply = {
               ...payload.new,
               upvotes_count: 0,
@@ -141,6 +140,7 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
         .select('role')
         .eq('user_id', user.id)
         .single()
+
 
       const userRole = userData?.role || 'student'
 
