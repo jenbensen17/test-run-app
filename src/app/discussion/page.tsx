@@ -51,11 +51,7 @@ export default async function DiscussionPage(
   // Fetch posts with reply counts
   const { data: posts } = await query
 
-  // Get user roles for all posts
-  const { data: userRoles } = await supabase
-    .from('user_roles')
-    .select('user_id, role')
-    .in('user_id', posts?.map(p => p.user_id) || [])
+
 
   // Fetch replies for each post
   const postsWithReplies = await Promise.all(
