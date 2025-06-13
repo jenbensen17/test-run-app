@@ -2,7 +2,19 @@
 
 This is a [Next.js](https://nextjs.org) project that provides an interactive platform for BYU's analytics class, focusing on facilitating student discussions, administrative tools, and authentication.
 
-## Implemented Features
+## Project Overview
+
+This platform serves as an interactive discussion board for BYU's analytics class, designed to enhance student learning and facilitate efficient problem-solving during lectures. The application is built with modern web technologies and follows best practices for security, scalability, and user experience.
+
+## Tech Stack
+
+- **Frontend**: Next.js 14 with App Router, TypeScript, and Tailwind CSS
+- **Backend**: Serverless architecture with Next.js API routes
+- **Database**: Supabase PostgreSQL for scalable data storage
+- **Authentication**: Supabase Auth with BYU email verification
+- **Deployment**: Vercel (Production URL: https://test-run-app.vercel.app/)
+
+## Architecture Decisions
 
 ### 1. Discussion Board
 - Students can submit code-related questions with error messages
@@ -21,7 +33,7 @@ This is a [Next.js](https://nextjs.org) project that provides an interactive pla
 - Role-based access control:
   - Instructor role with full moderation capabilities
   - Student role with discussion participation access
-- Secure session management
+- Protected API routes and middleware validation
 
 ### 4. Data Persistence
 - Persistent storage using Supabase PostgreSQL database for:
@@ -32,8 +44,6 @@ This is a [Next.js](https://nextjs.org) project that provides an interactive pla
 
 ## Project Structure
 
-The project follows a clean architecture with the following main directories:
-
 ```
 src/
 ├── app/          # Next.js app router pages and layouts
@@ -42,20 +52,14 @@ src/
 └── utils/        # Utility functions and helpers
 ```
 
-
-
 ## Development
 
 The application is built with:
-- Next.js 14 with App Router
-- TypeScript for type safety
-- Tailwind CSS for styling
-- Supabase for authentication and database
-- ESLint for code quality
-
-You can start editing the pages by modifying files in the `src/app` directory. The pages auto-update as you edit the files.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a custom font family.
+- Next.js 14 with App Router for server-side rendering and API routes
+- TypeScript for type safety and better developer experience
+- Tailwind CSS for responsive and maintainable styling
+- Supabase for authentication and real-time database capabilities
+- ESLint and Prettier for code quality and consistency
 
 ## Deployment
 
