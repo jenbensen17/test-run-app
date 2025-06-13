@@ -1,7 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import RoleSelector from '@/components/RoleSelector'
-import { signOut } from './actions'
+import DashboardLayout from '@/components/DashboardLayout'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -39,45 +39,23 @@ export default async function DashboardPage() {
 
   // Show the regular dashboard for users with roles
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-              <p className="mt-2 text-gray-600">
-                Welcome, {user.email} ({roleData.role})
+    <DashboardLayout>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p className="mt-2 text-gray-600">
+          Welcome to your analytics dashboard
+        </p>
+        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <h3 className="text-lg font-medium text-gray-900">Discussion Board</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                View and participate in class discussions
               </p>
-            </div>
-            <form>
-              <button
-                formAction={signOut}
-                className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-              >
-                Sign out
-              </button>
-            </form>
-          </div>
-          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg font-medium text-gray-900">Study Sessions</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Start a new study session or continue your progress
-                </p>
-              </div>
-            </div>
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg font-medium text-gray-900">Discussion Board</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  View and participate in class discussions
-                </p>
-              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 } 

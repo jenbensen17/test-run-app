@@ -35,7 +35,7 @@ export default async function LoginPage() {
                         type="email"
                         required
                         className="text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                        placeholder="you@byu.edu"
+                        placeholder="example@byu.edu"
                       />
                     </div>
                   </div>
