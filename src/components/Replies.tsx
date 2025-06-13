@@ -258,13 +258,14 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
               <div className="flex-1">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm font-medium text-gray-900">
-                    {reply.user_email}
+                    {reply.is_ai_response ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        AI Assistant
+                      </span>
+                    ) : (
+                      reply.user_email
+                    )}
                   </span>
-                  {reply.is_ai_response && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                      AI Assistant
-                    </span>
-                  )}
                 </div>
                 <p className="mt-1 text-gray-600">{reply.content}</p>
                 <p className="mt-1 text-sm text-gray-500">

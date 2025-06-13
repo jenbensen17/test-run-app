@@ -158,7 +158,8 @@ export default async function DiscussionPage() {
                       <div>
                         <h3 className="text-lg font-medium text-gray-900">{post.title}</h3>
                         <p className="mt-1 text-sm text-gray-500">
-                          Posted by {post.user_email} • {new Date(post.created_at).toLocaleDateString()}
+                          Posted by <span className="font-medium">{post.user_email}</span>
+                          <br /><span className="text-gray-400">{new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                         </p>
                       </div>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
