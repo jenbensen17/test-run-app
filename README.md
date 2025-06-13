@@ -16,6 +16,7 @@ This is a [Next.js](https://nextjs.org) project that provides an interactive pla
 - Post pinning functionality
 
 ### 3. Authentication and Roles
+- Authentication implemented using Supabase Auth
 - BYU email-based authentication system
 - Role-based access control:
   - Instructor role with full moderation capabilities
@@ -23,7 +24,7 @@ This is a [Next.js](https://nextjs.org) project that provides an interactive pla
 - Secure session management
 
 ### 4. Data Persistence
-- Persistent storage for:
+- Persistent storage using Supabase PostgreSQL database for:
   - Student submissions
   - AI responses
   - Discussion board content
@@ -37,32 +38,11 @@ The project follows a clean architecture with the following main directories:
 src/
 ├── app/          # Next.js app router pages and layouts
 ├── components/   # Reusable React components
+├── lib/          # Supabase client and database types
 └── utils/        # Utility functions and helpers
 ```
 
-## Getting Started
 
-First, install the dependencies:
-
-```bash
-npm install
-# or
-yarn install
-# or
-pnpm install
-```
-
-Then, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## Development
 
@@ -70,25 +50,15 @@ The application is built with:
 - Next.js 14 with App Router
 - TypeScript for type safety
 - Tailwind CSS for styling
+- Supabase for authentication and database
 - ESLint for code quality
 
 You can start editing the pages by modifying files in the `src/app` directory. The pages auto-update as you edit the files.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a custom font family.
 
+## Deployment
 
+This project is deployed on [Vercel](https://vercel.com), the platform created by the makers of Next.js. The deployment process is automated through GitHub integration, with environment variables securely managed through the Vercel dashboard.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+You can view the live deployment at: [https://test-run-app.vercel.app/]
