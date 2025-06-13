@@ -11,7 +11,7 @@ type Reply = {
   created_at: string
   upvotes_count: number
   has_upvoted: boolean
-  user_role?: string
+  user_role: string
 }
 
 type RepliesProps = {
@@ -40,18 +40,10 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
         async (payload) => {
           if (payload.eventType === 'INSERT') {
             const { data: { user } } = await supabase.auth.getUser()
-            // Fetch user role
-            const { data: roleData } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', user?.id)
-              .single()
-
             const newReply = {
               ...payload.new,
               upvotes_count: 0,
-              has_upvoted: false,
-              user_role: roleData?.role
+              has_upvoted: false
             } as Reply
             setReplies(current => sortReplies([newReply, ...current]))
           } else if (payload.eventType === 'DELETE') {
@@ -68,7 +60,6 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
           filter: `reply_id=in.(${replies.map(r => r.id).join(',')})`
         },
         async () => {
-          // Refetch replies to get updated upvote counts
           const { data: updatedReplies } = await supabase
             .from('replies')
             .select(`
@@ -78,20 +69,22 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
             .eq('post_id', postId)
             .order('created_at', { ascending: true })
 
+          if (!updatedReplies) return
+
           const { data: { user } } = await supabase.auth.getUser()
           const { data: userUpvotes } = await supabase
             .from('upvotes')
             .select('reply_id')
             .eq('user_id', user?.id)
-            .in('reply_id', updatedReplies?.map(r => r.id) || [])
+            .in('reply_id', updatedReplies.map(r => r.id))
 
           const userUpvoteIds = new Set(userUpvotes?.map(u => u.reply_id))
 
-          const transformedReplies = updatedReplies?.map(reply => ({
+          const transformedReplies = updatedReplies.map(reply => ({
             ...reply,
             upvotes_count: reply.upvotes?.[0]?.count || 0,
             has_upvoted: userUpvoteIds.has(reply.id)
-          })) || []
+          }))
 
           setReplies(sortReplies(transformedReplies))
         }
@@ -101,10 +94,10 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [postId, supabase])
+  }, [postId, supabase, replies])
 
   const sortReplies = (repliesToSort: Reply[]) => {
-    return repliesToSort.sort((a, b) => {
+    return [...repliesToSort].sort((a, b) => {
       if (b.upvotes_count !== a.upvotes_count) {
         return b.upvotes_count - a.upvotes_count
       }
@@ -116,9 +109,19 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
     e.preventDefault()
     if (!newReply.trim()) return
 
+    setIsSubmitting(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
+
+      // Get the user's role
+      const { data: userData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single()
+
+      const userRole = userData?.role || 'student'
 
       // Create optimistic reply
       const optimisticReply: Reply = {
@@ -129,44 +132,32 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
         is_ai_response: false,
         upvotes_count: 0,
         has_upvoted: false,
-        user_role: undefined
+        user_role: userRole
       }
 
-      // Add optimistic reply to the list
       setReplies(current => [...current, optimisticReply])
       setNewReply('')
 
-      // Then make the actual database call
-      const { data: reply, error } = await supabase
+      const { error: insertError } = await supabase
         .from('replies')
         .insert([{
           content: newReply.trim(),
           post_id: postId,
           user_id: user.id,
           user_email: user.email,
-          is_ai_response: false
+          is_ai_response: false,
+          user_role: userRole
         }])
-        .select()
-        .single()
 
-      if (error) {
-        console.error('Database error:', error)
-        throw error
-      }
+      if (insertError) throw insertError
 
-      // Replace optimistic reply with real one
-      setReplies(current =>
-        current.map(r => r.id === optimisticReply.id ? {
-          ...reply,
-          upvotes_count: 0,
-          has_upvoted: false
-        } : r)
-      )
     } catch (error) {
       console.error('Error submitting reply:', error)
       // Remove optimistic reply on error
       setReplies(current => current.filter(r => !r.id.startsWith('temp-')))
       setNewReply(newReply) // Restore the content
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -175,7 +166,7 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      // Optimistically update the UI without reordering
+      // Optimistically update the UI
       setReplies(current =>
         current.map(reply =>
           reply.id === replyId
@@ -188,7 +179,7 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
         )
       )
 
-      // Then update the database
+      // Update the database
       if (hasUpvoted) {
         await supabase
           .from('upvotes')
@@ -201,8 +192,7 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
       }
     } catch (error) {
       console.error('Error toggling upvote:', error)
-      // Revert the optimistic update if there's an error
-      const { data: { user } } = await supabase.auth.getUser()
+      // Revert optimistic update by refetching current state
       const { data: updatedReplies } = await supabase
         .from('replies')
         .select(`
@@ -212,21 +202,24 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
         .eq('post_id', postId)
         .order('created_at', { ascending: true })
 
+      if (!updatedReplies) return
+
+      const { data: { user } } = await supabase.auth.getUser()
       const { data: userUpvotes } = await supabase
         .from('upvotes')
         .select('reply_id')
         .eq('user_id', user?.id)
-        .in('reply_id', updatedReplies?.map(r => r.id) || [])
+        .in('reply_id', updatedReplies.map(r => r.id))
 
       const userUpvoteIds = new Set(userUpvotes?.map(u => u.reply_id))
 
-      const transformedReplies = updatedReplies?.map(reply => ({
+      const transformedReplies = updatedReplies.map(reply => ({
         ...reply,
         upvotes_count: reply.upvotes?.[0]?.count || 0,
         has_upvoted: userUpvoteIds.has(reply.id)
-      })) || []
+      }))
 
-      setReplies(transformedReplies)
+      setReplies(sortReplies(transformedReplies))
     }
   }
 

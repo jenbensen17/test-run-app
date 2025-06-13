@@ -13,6 +13,13 @@ export async function createPost(formData: FormData) {
     redirect('/login')
   }
 
+  // Get user's role
+  const { data: roleData } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single()
+
   const title = formData.get('title') as string
   const content = formData.get('content') as string
   const topic = formData.get('topic') as string
@@ -29,7 +36,8 @@ export async function createPost(formData: FormData) {
       content,
       topic,
       user_id: user.id,
-      user_email: user.email
+      user_email: user.email,
+      user_role: roleData?.role || 'student' // Default to student if no role is set
     }])
     .select()
     .single()
@@ -59,7 +67,7 @@ export async function createPost(formData: FormData) {
 
   // Revalidate the discussion page to show the new post
   revalidatePath('/discussion')
-  redirect('/discussion')
+  return { success: true }
 }
 
 export async function markPostResolved(postId: string) {

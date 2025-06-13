@@ -14,11 +14,13 @@ export async function generateAIResponse(question: string): Promise<string> {
     
     Guidelines:
     - Keep your response under ${MAX_RESPONSE_LENGTH} characters
-    - Use plain text only (no markdown, no code blocks)
-    - If the question involves code, explain the solution in plain text
+    - Use plain text with appropriate line breaks for readability
+    - Start new paragraphs for new ideas or examples
+    - Use blank lines between major sections
+    - If the question involves code, explain the solution in plain text with clear steps
     - If the question involves an error message, explain the error and fix in plain text
     - If the text is invalid, reply with "I apologize, but I cannot answer that question."
-    - Focus on being clear and concise.
+    - Focus on being clear and concise
     
     Question: ${question}`
 
@@ -26,12 +28,16 @@ export async function generateAIResponse(question: string): Promise<string> {
     const response = await result.response
     const text = response.text()
     
-    // Ensure the response is within the character limit
-    return text.length > MAX_RESPONSE_LENGTH 
-      ? text.substring(0, MAX_RESPONSE_LENGTH - 3) + '...'
-      : text
+    // Format response with line breaks and ensure it's within character limit
+    const formattedText = text
+      .replace(/([.!?])\s+/g, '$1\n\n') // Add line breaks after sentences
+      .replace(/\n{3,}/g, '\n\n') // Remove excess line breaks
+    
+    return formattedText.length > MAX_RESPONSE_LENGTH 
+      ? formattedText.substring(0, MAX_RESPONSE_LENGTH - 3) + '...'
+      : formattedText
   } catch (error) {
     console.error('Error generating AI response:', error)
     return 'I apologize, but I encountered an error while generating a response. Please try again later.'
   }
-} 
+}
