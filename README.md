@@ -1,8 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Analytics Class Discussion Platform
+
+This is a [Next.js](https://nextjs.org) project that provides an interactive platform for BYU's analytics class, focusing on facilitating student discussions, administrative tools, and authentication.
+
+## Implemented Features
+
+### 1. Discussion Board
+- Students can submit code-related questions with error messages
+- Integrated AI assistant that automatically provides solutions
+- Response and upvoting system for student interaction
+- Questions organized by lecture/topic
+- Question resolution tracking system
+
+### 2. Admin Tools
+- Instructor moderation capabilities
+- Post pinning functionality
+
+### 3. Authentication and Roles
+- BYU email-based authentication system
+- Role-based access control:
+  - Instructor role with full moderation capabilities
+  - Student role with discussion participation access
+- Secure session management
+
+### 4. Data Persistence
+- Persistent storage for:
+  - Student submissions
+  - AI responses
+  - Discussion board content
+  - User data and roles
+
+## Project Structure
+
+The project follows a clean architecture with the following main directories:
+
+```
+src/
+├── app/          # Next.js app router pages and layouts
+├── components/   # Reusable React components
+└── utils/        # Utility functions and helpers
+```
 
 ## Getting Started
 
-First, run the development server:
+First, install the dependencies:
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
@@ -10,15 +60,23 @@ npm run dev
 yarn dev
 # or
 pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The application is built with:
+- Next.js 14 with App Router
+- TypeScript for type safety
+- Tailwind CSS for styling
+- ESLint for code quality
+
+You can start editing the pages by modifying files in the `src/app` directory. The pages auto-update as you edit the files.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a custom font family.
+
+
 
 ## Learn More
 
