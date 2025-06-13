@@ -267,7 +267,7 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
                     )}
                   </span>
                 </div>
-                <p className="mt-1 text-gray-600">{reply.content}</p>
+                <div className="mt-1 text-gray-600 whitespace-pre-wrap">{reply.content}</div>
                 <p className="mt-1 text-sm text-gray-500">
                   {new Date(reply.created_at).toLocaleDateString()}
                 </p>

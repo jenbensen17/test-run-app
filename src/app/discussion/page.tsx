@@ -192,7 +192,7 @@ export default async function DiscussionPage(
                         </span>
                       </div>
                     </div>
-                    <p className="mt-2 text-gray-600">{post.content}</p>
+                    <div className="mt-2 text-gray-600 whitespace-pre-wrap">{post.content}</div>
                   </div>
                   <div className="border-t border-gray-200 px-4 py-4">
                     <Replies postId={post.id} initialReplies={post.replies} />
