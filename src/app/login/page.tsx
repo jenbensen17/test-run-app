@@ -1,7 +1,6 @@
 import { login } from './actions'
 import { createClient } from '@/app/utils/supabase-server'
 import { redirect } from 'next/navigation'
-import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default async function LoginPage() {
   const supabase = await createClient()

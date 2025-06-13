@@ -1,10 +1,9 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/DashboardLayout'
-import { createPost, markPostResolved, togglePinPost, deletePost } from './actions'
+import { markPostResolved, togglePinPost, deletePost } from './actions'
 import Replies from '@/components/Replies'
 import TopicFilterWrapper from '@/components/TopicFilterWrapper'
-import { useRouter } from 'next/navigation'
 import QuestionForm from '@/components/QuestionForm'
 import DeleteButton from '@/components/DeleteButton'
 
