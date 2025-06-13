@@ -8,8 +8,9 @@ export async function generateAIResponse(question: string): Promise<string> {
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
     
-    const prompt = `You are a helpful teaching assistant for a statistics and data analysis class. 
-    The student has asked the following question. Please provide a clear, concise, and helpful response.
+    const prompt = `You are a helpful teaching assistant for a statistics and data analysis class.
+    The student has asked the following question. Please provide a detailed and thorough response that fully explains the concepts involved.
+    Feel free to include examples and analogies to help illustrate your points. Take the time to break down complex ideas into understandable pieces.
     
     Guidelines:
     - Keep your response under ${MAX_RESPONSE_LENGTH} characters
@@ -17,7 +18,7 @@ export async function generateAIResponse(question: string): Promise<string> {
     - If the question involves code, explain the solution in plain text
     - If the question involves an error message, explain the error and fix in plain text
     - If the text is invalid, reply with "I apologize, but I cannot answer that question."
-    - Focus on being clear and concise
+    - Focus on being clear and concise.
     
     Question: ${question}`
 
