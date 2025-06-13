@@ -178,20 +178,20 @@ export default async function DiscussionPage({
                           <br /><span className="text-gray-400">{new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                         </p>
                       </div>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        post.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        post.status === 'answered' ? 'bg-blue-100 text-blue-800' :
-                        'bg-green-100 text-green-800'
-                      }`}>
-                        {post.status}
-                      </span>
+                      <div className="flex gap-2">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                          {post.topic}
+                        </span>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          post.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          post.status === 'answered' ? 'bg-blue-100 text-blue-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {post.status}
+                        </span>
+                      </div>
                     </div>
                     <p className="mt-2 text-gray-600">{post.content}</p>
-                    <div className="mt-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        {post.topic}
-                      </span>
-                    </div>
                   </div>
                   <div className="border-t border-gray-200 px-4 py-4">
                     <Replies postId={post.id} initialReplies={post.replies} />
