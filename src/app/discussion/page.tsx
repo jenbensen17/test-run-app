@@ -3,8 +3,13 @@ import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/DashboardLayout'
 import { createPost } from './actions'
 import Replies from '@/components/Replies'
+import TopicFilterWrapper from '@/components/TopicFilterWrapper'
 
-export default async function DiscussionPage() {
+export default async function DiscussionPage({
+  searchParams,
+}: {
+  searchParams: { topic?: string }
+}) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -23,14 +28,22 @@ export default async function DiscussionPage() {
     redirect('/dashboard')
   }
 
-  // Fetch posts with reply counts
-  const { data: posts } = await supabase
+  // Build the query based on topic filter
+  let query = supabase
     .from('posts')
     .select(`
       *,
       replies:replies(count)
     `)
     .order('created_at', { ascending: false })
+
+  // Apply topic filter if specified
+  if (searchParams.topic) {
+    query = query.eq('topic', searchParams.topic)
+  }
+
+  // Fetch posts with reply counts
+  const { data: posts } = await query
 
   // Fetch replies for each post
   const postsWithReplies = await Promise.all(
@@ -148,7 +161,10 @@ export default async function DiscussionPage() {
 
         {/* Questions List */}
         <div className="mt-6">
-          <h2 className="text-xl font-semibold text-gray-900">Recent Questions</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold text-gray-900">Recent Questions</h2>
+            <TopicFilterWrapper currentTopic={searchParams.topic} />
+          </div>
           <div className="mt-4 space-y-6">
             {postsWithReplies.length > 0 ? (
               postsWithReplies.map((post) => (
