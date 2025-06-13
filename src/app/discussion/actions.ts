@@ -79,14 +79,22 @@ export async function markPostResolved(postId: string) {
     redirect('/login')
   }
 
-  // First check if the user is the post author
+  // Get user role
+  const { data: roleData } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single()
+
+  // First check if the user is the post author or an instructor
   const { data: post } = await supabase
     .from('posts')
     .select('user_id')
     .eq('id', postId)
     .single()
 
-  if (!post || post.user_id !== user.id) {
+  const isInstructor = roleData?.role === 'instructor'
+  if (!post || (!isInstructor && post.user_id !== user.id)) {
     redirect('/discussion')
   }
 
@@ -137,6 +145,82 @@ export async function togglePinPost(postId: string) {
 
   if (error) {
     console.error('Error toggling pin status:', error)
+    redirect('/discussion')
+  }
+
+  revalidatePath('/discussion')
+}
+
+export async function deletePost(postId: string) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    redirect('/login')
+  }
+
+  // Check if the user is an instructor
+  const { data: roleData } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!roleData || roleData.role !== 'instructor') {
+    redirect('/discussion')
+  }
+
+  // Delete all replies first (due to foreign key constraints)
+  const { error: replyError } = await supabase
+    .from('replies')
+    .delete()
+    .eq('post_id', postId)
+
+  if (replyError) {
+    console.error('Error deleting replies:', replyError)
+    redirect('/discussion')
+  }
+
+  // Then delete the post
+  const { error: postError } = await supabase
+    .from('posts')
+    .delete()
+    .eq('id', postId)
+
+  if (postError) {
+    console.error('Error deleting post:', postError)
+    redirect('/discussion')
+  }
+
+  revalidatePath('/discussion')
+}
+
+export async function deleteReply(replyId: string) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    redirect('/login')
+  }
+
+  // Check if the user is an instructor
+  const { data: roleData } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!roleData || roleData.role !== 'instructor') {
+    redirect('/discussion')
+  }
+
+  const { error } = await supabase
+    .from('replies')
+    .delete()
+    .eq('id', replyId)
+
+  if (error) {
+    console.error('Error deleting reply:', error)
     redirect('/discussion')
   }
 

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
+import { deleteReply } from '@/app/discussion/actions'
+import DeleteButton from '@/components/DeleteButton'
 
 type Reply = {
   id: string
@@ -12,6 +14,7 @@ type Reply = {
   upvotes_count: number
   has_upvoted: boolean
   user_role: string
+  isLoading?: boolean
 }
 
 type RepliesProps = {
@@ -23,7 +26,25 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
   const [replies, setReplies] = useState<Reply[]>(initialReplies)
   const [newReply, setNewReply] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isInstructor, setIsInstructor] = useState(false)
   const supabase = createClient()
+
+  // Check if user is instructor
+  useEffect(() => {
+    async function checkRole() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single()
+        
+        setIsInstructor(roleData?.role === 'instructor')
+      }
+    }
+    checkRole()
+  }, [supabase])
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -123,22 +144,24 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
 
       const userRole = userData?.role || 'student'
 
-      // Create optimistic reply
+      // Create optimistic reply with loading state
+      const tempId = 'temp-' + Date.now()
       const optimisticReply: Reply = {
-        id: 'temp-' + Date.now(),
+        id: tempId,
         content: newReply.trim(),
         created_at: new Date().toISOString(),
         user_email: user.email || '',
         is_ai_response: false,
         upvotes_count: 0,
         has_upvoted: false,
-        user_role: userRole
+        user_role: userRole,
+        isLoading: true
       }
 
       setReplies(current => [...current, optimisticReply])
       setNewReply('')
 
-      const { error: insertError } = await supabase
+      const { data: newReplyData, error: insertError } = await supabase
         .from('replies')
         .insert([{
           content: newReply.trim(),
@@ -148,13 +171,20 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
           is_ai_response: false,
           user_role: userRole
         }])
+        .select()
+        .single()
 
       if (insertError) throw insertError
+
+      // Update the temporary reply with the real one
+      setReplies(current => current.map(reply => 
+        reply.id === tempId ? { ...newReplyData, upvotes_count: 0, has_upvoted: false } : reply
+      ))
 
     } catch (error) {
       console.error('Error submitting reply:', error)
       // Remove optimistic reply on error
-      setReplies(current => current.filter(r => !r.id.startsWith('temp-')))
+      setReplies(current => current.filter(r => r.id !== 'temp-' + Date.now()))
       setNewReply(newReply) // Restore the content
     } finally {
       setIsSubmitting(false)
@@ -279,6 +309,14 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
                         )}
                       </>
                     )}
+                    {reply.isLoading && (
+                      <span className="ml-2 inline-flex items-center">
+                        <svg className="animate-spin h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      </span>
+                    )}
                   </span>
                 </div>
                 <div className="mt-1 text-gray-600 whitespace-pre-wrap">{reply.content}</div>
@@ -286,30 +324,45 @@ export default function Replies({ postId, initialReplies }: RepliesProps) {
                   {new Date(reply.created_at).toLocaleDateString()}
                 </p>
               </div>
-              <button
-                onClick={() => handleUpvote(reply.id, reply.has_upvoted)}
-                className={`ml-4 flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${
-                  reply.has_upvoted
-                    ? 'bg-indigo-100 text-indigo-800'
-                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                }`}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handleUpvote(reply.id, reply.has_upvoted)}
+                  className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${
+                    reply.has_upvoted
+                      ? 'bg-indigo-100 text-indigo-800'
+                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                  }`}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 15l7-7 7 7"
-                  />
-                </svg>
-                <span>{reply.upvotes_count}</span>
-              </button>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 15l7-7 7 7"
+                    />
+                  </svg>
+                  <span>{reply.upvotes_count}</span>
+                </button>
+                {isInstructor && !reply.isLoading && (
+                  <form action={deleteReply.bind(null, reply.id)}>
+                    <DeleteButton
+                      onDelete={deleteReply.bind(null, reply.id)}
+                      onDeleted={() => {
+                        setReplies(current => current.filter(r => r.id !== reply.id))
+                      }}
+                      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                    >
+                      Delete
+                    </DeleteButton>
+                  </form>
+                )}
+              </div>
             </div>
           </div>
         ))}

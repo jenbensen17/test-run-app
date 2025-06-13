@@ -1,11 +1,12 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/DashboardLayout'
-import { createPost, markPostResolved, togglePinPost } from './actions'
+import { createPost, markPostResolved, togglePinPost, deletePost } from './actions'
 import Replies from '@/components/Replies'
 import TopicFilterWrapper from '@/components/TopicFilterWrapper'
 import { useRouter } from 'next/navigation'
 import QuestionForm from '@/components/QuestionForm'
+import DeleteButton from '@/components/DeleteButton'
 
 export default async function DiscussionPage(
   props: {
@@ -153,24 +154,34 @@ export default async function DiscussionPage(
                           {post.topic}
                         </span>
                         {isInstructor && (
-                          <form action={togglePinPost.bind(null, post.id)}>
-                            <button
-                              type="submit"
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                post.pinned
-                                  ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                              } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                            >
-                              {post.pinned ? 'Unpin' : 'Pin'}
-                            </button>
-                          </form>
+                          <>
+                            <form action={togglePinPost.bind(null, post.id)}>
+                              <button
+                                type="submit"
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  post.pinned
+                                    ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                                } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+                              >
+                                {post.pinned ? 'Unpin' : 'Pin'}
+                              </button>
+                            </form>
+                            <form action={deletePost.bind(null, post.id)}>
+                              <DeleteButton
+                                onDelete={deletePost.bind(null, post.id)}
+                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                              >
+                                Delete
+                              </DeleteButton>
+                            </form>
+                          </>
                         )}
                         {post.status === 'resolved' ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             Resolved
                           </span>
-                        ) : post.user_id === user.id ? (
+                        ) : (post.user_id === user.id || isInstructor) ? (
                           <form action={markPostResolved.bind(null, post.id)}>
                             <button
                               type="submit"
