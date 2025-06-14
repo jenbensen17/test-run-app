@@ -12,6 +12,7 @@ This platform serves as an interactive discussion board for BYU's analytics clas
 - **Backend**: Serverless architecture with Next.js API routes
 - **Database**: Supabase PostgreSQL for scalable data storage
 - **Authentication**: Supabase Auth with BYU email verification
+- **AI Integration**: Google's Gemini 2.5 Flash for intelligent responses
 - **Deployment**: Vercel (Production URL: https://test-run-app.vercel.app/)
 
 ## Architecture Decisions
