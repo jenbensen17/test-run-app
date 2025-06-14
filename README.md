@@ -49,7 +49,7 @@ This platform serves as an interactive discussion board for BYU's analytics clas
 src/
 ├── app/          # Next.js app router pages and layouts
 ├── components/   # Reusable React components
-├── lib/          # Supabase client and database types
+├── types/        # Database types
 └── utils/        # Utility functions and helpers
 ```
 
